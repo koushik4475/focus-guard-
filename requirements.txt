@@ -1,0 +1,18 @@
+# Core Libraries (Direct Imports)
+opencv-python<4.12      # Use <4.12 to stay compatible with MediaPipe's numpy requirement
+numpy>=1.26.4,<2        # Keep numpy 1.26.x (must be <2) to satisfy mediapipe
+gTTS>=2.5.4            # For Google Text-to-Speech generation
+pygame>=2.0.1          # For playing audio alerts from gTTS
+mediapipe>=0.10.21     # For FaceMesh and Hands detection
+scipy>=1.15.3          # For spatial distance calculations
+
+# UI Framework (PyQt6 for the Animated Loading Screen)
+PyQt6>=6.0.0
+
+# Critical Dependencies (Often required by MediaPipe/OpenCV)
+protobuf>=4.25.8
+# Note: playsound and dlib were not present in `pip freeze` output when this file
+# was generated earlier. If you need them and they fail to import locally, you can
+# try installing `playsound` via pip (pip install playsound) and for `dlib`
+# use a prebuilt wheel matching your Python & OS or build from source.
+# for any doubts contact: https://koushikhy.netlify.app 

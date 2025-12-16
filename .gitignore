@@ -1,0 +1,35 @@
+# Virtual environments
+venv310/
+.venv/
+venv/
+ENV/
+env/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python env-specific
+pip-log.txt
+
+# Detect and ignore local data
+venv310/
+detected_images/
+
+# Allow README to be preserved from remote
+# (do not ignore README.md)
