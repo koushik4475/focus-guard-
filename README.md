@@ -5,14 +5,13 @@
 
 <!-- Animated Typing Effect -->
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=00F7F7&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=Real-Time+Drowsiness+Detection+%F0%9F%91%81%EF%B8%8F;Phone+Usage+Monitoring+%F0%9F%93%B1;Advanced+AI+Computer+Vision+%F0%9F%A7%A0;Military-Grade+Safety+Alerts+%F0%9F%9A%A8" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=00F7F7&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=Real-Time+Drowsiness+Detection+%F0%9F%91%81%EF%B8%8F;Phone+Usage+Monitoring+%F0%9F%93%B1;Advanced+AI+Computer+Vision+%F0%9F%A7%A0;Experimental+Driver+Monitoring+Alerts+%F0%9F%9A%A8" alt="Typing SVG" />
 </p>
 
 <!-- Stylish Badges -->
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Active%20Development-00ff00?style=for-the-badge&logo=statuspage&logoColor=white&labelColor=1a1a1a" alt="Status">
   <img src="https://img.shields.io/badge/Version-6.0-ff6b35?style=for-the-badge&logo=semver&logoColor=white&labelColor=1a1a1a" alt="Version">
-  <img src="https://img.shields.io/badge/Accuracy-92%25+-00d4ff?style=for-the-badge&logo=target&logoColor=white&labelColor=1a1a1a" alt="Accuracy">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=1a1a1a" alt="License">
 </p>
 
@@ -168,7 +167,10 @@ VOICE & VISUAL ALERTS
 ### **Installation Steps**
 
 ```bash
-# 1. Clone Repository
+# Focus Guard | Python Computer Vision Driver Drowsiness & Distraction Monitoring Prototype
+
+Focus Guard is a Python and OpenCV computer-vision prototype for exploring driver drowsiness and distraction monitoring with a camera feed. The README describes face/eye-state signals, phone-use and attention alerts, and event evidence logging. It is an educational experiment—not certified driver-safety equipment, a medical device, or a system for making real-world driving or employment decisions.
+
 git clone https://github.com/koushik4475/focus-guard-.git
 cd focus-guard-
 
