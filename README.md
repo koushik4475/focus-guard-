@@ -1,3 +1,8 @@
+# Focus Guard | Python Computer Vision Driver Drowsiness & Distraction Monitoring Prototype
+
+Focus Guard is a Python and OpenCV computer-vision prototype for exploring driver drowsiness and distraction monitoring with a camera feed. The README describes face/eye-state signals, phone-use and attention alerts, and event evidence logging. It is an educational experiment—not certified driver-safety equipment, a medical device, or a system for making real-world driving or employment decisions.
+
+
 <div align="center">
 
 <!-- Main Banner -->
@@ -167,10 +172,7 @@ VOICE & VISUAL ALERTS
 ### **Installation Steps**
 
 ```bash
-# Focus Guard | Python Computer Vision Driver Drowsiness & Distraction Monitoring Prototype
-
-Focus Guard is a Python and OpenCV computer-vision prototype for exploring driver drowsiness and distraction monitoring with a camera feed. The README describes face/eye-state signals, phone-use and attention alerts, and event evidence logging. It is an educational experiment—not certified driver-safety equipment, a medical device, or a system for making real-world driving or employment decisions.
-
+# Clone repository
 git clone https://github.com/koushik4475/focus-guard-.git
 cd focus-guard-
 
