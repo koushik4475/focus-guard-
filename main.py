@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from typing import Optional, Tuple, Dict, Any, List
 import multiprocessing as mp_core
-from queue import Empty
+from queue import Empty, Full
 import gtts
 import pygame
 import mediapipe as mp
@@ -1148,7 +1148,16 @@ def main_ui_worker(frame_queue, result_queue, stop_event, tts_queue, alert_histo
     cv2.destroyAllWindows()
     print("[Main UI Worker] Shutting down.")
 
-# --- Run Multi-Process System (Unchanged) ---
+def _stop_worker_process(process, timeout: float = 2.0) -> None:
+    """Wait briefly for a worker, then terminate it so shutdown cannot hang."""
+    process.join(timeout=timeout)
+    if process.is_alive():
+        print(f"[SYSTEM] Worker {process.name} did not stop; terminating.")
+        process.terminate()
+        process.join(timeout=timeout)
+
+
+# --- Run Multi-Process System ---
 def run_multi_process_system():
     def final_cleanup_and_exit():
         cv2.destroyAllWindows()
@@ -1202,12 +1211,18 @@ def run_multi_process_system():
     finally:
         stop_event.set()
         
-        tts_queue.put(None) 
+        # The bounded queue may already contain an alert. Never block cleanup
+        # trying to enqueue the worker sentinel; the timeout below is the fallback.
+        try:
+            tts_queue.put_nowait(None)
+        except Full:
+            pass
+
         
         print("[SYSTEM] Joining all worker processes...")
-        tts_proc.join(timeout=2.0)
-        capture_proc.join(timeout=2.0)
-        processing_proc.join(timeout=2.0)
+        _stop_worker_process(tts_proc)
+        _stop_worker_process(capture_proc)
+        _stop_worker_process(processing_proc)
         
         final_cleanup_and_exit()
 
