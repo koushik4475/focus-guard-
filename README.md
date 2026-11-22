@@ -45,7 +45,7 @@ Focus Guard is a Python and OpenCV computer-vision prototype for exploring drive
 
 ## 🎯 Overview
 
-**FOCUS GUARD** is a cutting-edge, real-time driver monitoring system powered by advanced artificial intelligence and computer vision. Built with enterprise-grade technologies, it provides **military-precision detection** of driver distraction, drowsiness, and phone usage—delivering instant voice alerts and evidence capture to prevent accidents before they happen.
+**FOCUS GUARD** is an experimental real-time driver-monitoring prototype powered by computer vision. It explores detection of distraction, drowsiness, and phone usage, with voice alerts and evidence capture. Performance depends on camera placement, lighting, and individual conditions; the metrics below are not independently validated and should not be treated as guarantees.
 
 <div align="center">
 
@@ -67,7 +67,7 @@ Focus Guard is a Python and OpenCV computer-vision prototype for exploring drive
 - ✅ Automatic Face Recovery System
 - ✅ Adaptive Threshold Calibration
 
-**Performance Metrics:**
+**Reported (unvalidated) performance claims:**
 - Drowsiness Detection: 92%+ accuracy
 - Phone Usage: 87%+ accuracy
 - Look-Away Detection: 94%+ accuracy
@@ -184,7 +184,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # 4. Launch Application
-python focus_guard.py
+python main.py
 ```
 
 ---
@@ -272,7 +272,7 @@ MIT License - Copyright (c) 2025 Koushik HY
 
 ![Made with Love](https://img.shields.io/badge/Made_with-❤️_and_☕-red?style=for-the-badge)
 ![Built by Koushik](https://img.shields.io/badge/Built_by-Koushik_HY-00ff00?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Experimental-warning?style=for-the-badge)
 
 **🚗 Drive Safe, Stay Alert, Save Lives 🚗**
 
