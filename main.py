@@ -902,6 +902,9 @@ def video_capture_worker(frame_queue: mp_core.Queue, stop_event: mp_core.Event, 
         cap = cv2.VideoCapture(1)
         if not cap.isOpened():
             print('[Capture Worker] Cannot open camera on index 1 either. Exiting.')
+            cap.release()
+            # Unblock the loading screen so the parent can detect worker failure.
+            capture_ready_event.set()
             return
 
     capture_ready_event.set()
@@ -1179,11 +1182,19 @@ def run_multi_process_system():
     processing_proc = mp_core.Process(target=processing_worker, args=(frame_queue, result_queue, stop_event))
     processing_proc.start()
     
-    # 4. Run Loading Screen (BLOCKING)
-    run_loading_screen(capture_ready_event)
-
-    # 5. Start Main UI Worker (Original CV Interface - BLOCKING)
+    # 4. Run Loading Screen (BLOCKING). The capture worker signals this
+    # event on both success and startup failure, so the splash cannot wait forever.
     try:
+        run_loading_screen(capture_ready_event)
+
+        # A worker that exited during startup could not provide camera frames.
+        # Do not enter the UI loop, which would otherwise wait indefinitely.
+        capture_proc.join(timeout=1.0)
+        if capture_proc.exitcode is not None:
+            print("[SYSTEM] Camera initialization failed; shutting down.")
+            return
+
+        # 5. Start Main UI Worker (Original CV Interface - BLOCKING)
         main_ui_worker(frame_queue, result_queue, stop_event, tts_queue, alert_history, tts_active_flag)
     except Exception as e:
         print(f"[ERROR] Main UI Worker encountered an exception: {e}")
