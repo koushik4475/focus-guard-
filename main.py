@@ -284,10 +284,11 @@ class ModernProgressBar(QProgressBar):
 
 class ModernLoadingWindow(QMainWindow):
     """The main frameless window containing the loading screen elements."""
-    def __init__(self, main_app_ref, capture_ready_event):
+    def __init__(self, main_app_ref, capture_ready_event, capture_failed_event):
         super().__init__()
-        # Event to check if the background worker (camera) is ready
-        self.capture_ready_event = capture_ready_event 
+        # Startup events distinguish a ready camera from a completed failed attempt.
+        self.capture_ready_event = capture_ready_event
+        self.capture_failed_event = capture_failed_event
         
         self.setWindowTitle("Focus Guard - Loading")
         self.setFixedSize(1000, 700)
@@ -378,6 +379,12 @@ class ModernLoadingWindow(QMainWindow):
         self.background.update()
         
     def updateLoading(self):
+        if self.capture_failed_event.is_set():
+            self.loading_timer.stop()
+            self.status_label.setText("Camera unavailable. Connect a camera and restart.")
+            QTimer.singleShot(1800, self.startMainApplication)
+            return
+
         if self.current_stage < len(self.loading_stages):
             stage_name, target_progress = self.loading_stages[self.current_stage]
             
@@ -418,7 +425,10 @@ class ModernLoadingWindow(QMainWindow):
             self.move(event.globalPosition().toPoint() - self.drag_position)
             event.accept()
 
-def run_loading_screen(capture_ready_event: mp_core.Event):
+def run_loading_screen(
+    capture_ready_event: mp_core.Event,
+    capture_failed_event: mp_core.Event
+):
     """
     Runs the PyQt loading screen as a temporary, blocking application
     and quits it when the loading process is complete.
@@ -429,7 +439,7 @@ def run_loading_screen(capture_ready_event: mp_core.Event):
         if not app:
             app = QApplication(sys.argv)
         
-        splash = ModernLoadingWindow(None, capture_ready_event)
+        splash = ModernLoadingWindow(None, capture_ready_event, capture_failed_event)
         splash.show()
         
         # Blocks until QApplication.quit() is called inside ModernLoadingWindow
@@ -890,37 +900,51 @@ def speak_continuous(text: str, alert_type: str, alert_history: dict, tts_active
             pass
 
 # --- Video Capture Worker (Unchanged) ---
-def video_capture_worker(frame_queue: mp_core.Queue, stop_event: mp_core.Event, capture_ready_event: mp_core.Event):
+def video_capture_worker(
+    frame_queue: mp_core.Queue,
+    stop_event: mp_core.Event,
+    capture_ready_event: mp_core.Event,
+    capture_failed_event: mp_core.Event
+):
     print("[Capture Worker] Starting camera...")
-    cap = cv2.VideoCapture(0) 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    cap.set(cv2.CAP_PROP_FPS, 30)
-    
-    if not cap.isOpened():
-        print('[Capture Worker] Cannot open camera! Trying index 1...')
-        cap = cv2.VideoCapture(1)
-        if not cap.isOpened():
-            print('[Capture Worker] Cannot open camera on index 1 either. Exiting.')
-            return
+    cap = None
+    try:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        cap.set(cv2.CAP_PROP_FPS, 30)
 
-    capture_ready_event.set()
-    print("[Capture Worker] Camera is ready.")
-    
-    while not stop_event.is_set():
-        ret, frame = cap.read()
-        if not ret:
-            time.sleep(0.01)
-            continue
-        frame = cv2.flip(frame, 1)
-        try:
-            if frame_queue.qsize() > 0:
-                frame_queue.get_nowait()
-            frame_queue.put_nowait(frame)
-        except Exception:
-            continue
-    cap.release()
-    print("[Capture Worker] Shutting down.")
+        if not cap.isOpened():
+            print("[Capture Worker] Cannot open camera! Trying index 1...")
+            cap.release()
+            cap = cv2.VideoCapture(1)
+
+        if not cap.isOpened():
+            raise RuntimeError("Cannot open a camera on index 0 or 1")
+
+        print("[Capture Worker] Camera is ready.")
+        while not stop_event.is_set():
+            ret, frame = cap.read()
+            if not ret:
+                time.sleep(0.01)
+                continue
+            frame = cv2.flip(frame, 1)
+            try:
+                if frame_queue.qsize() > 0:
+                    frame_queue.get_nowait()
+                frame_queue.put_nowait(frame)
+            except Exception:
+                continue
+    except Exception as error:
+        print(f"[Capture Worker] Camera startup or capture failed: {error}")
+        capture_failed_event.set()
+        stop_event.set()
+    finally:
+        # Always release the loading screen, even if camera initialization fails.
+        capture_ready_event.set()
+        if cap is not None:
+            cap.release()
+        print("[Capture Worker] Shutting down.")
 
 # --- Enhanced Processing Worker (Unchanged) ---
 def processing_worker(frame_queue: mp_core.Queue, result_queue: mp_core.Queue, stop_event: mp_core.Event):
@@ -1158,7 +1182,8 @@ def run_multi_process_system():
     manager = mp_core.Manager()
     alert_history = manager.dict()
     tts_active_flag = mp_core.Value('b', False)
-    capture_ready_event = mp_core.Event() 
+    capture_ready_event = mp_core.Event()
+    capture_failed_event = mp_core.Event()
     
     tts_queue = mp_core.Queue(maxsize=1)
     frame_queue = mp_core.Queue(maxsize=1)
@@ -1173,18 +1198,26 @@ def run_multi_process_system():
     tts_proc = mp_core.Process(target=_gtts_alert_worker, args=(tts_queue, tts_active_flag), daemon=True)
     tts_proc.start()
 
-    capture_proc = mp_core.Process(target=video_capture_worker, args=(frame_queue, stop_event, capture_ready_event))
+    capture_proc = mp_core.Process(
+        target=video_capture_worker,
+        args=(frame_queue, stop_event, capture_ready_event, capture_failed_event)
+    )
     capture_proc.start()
 
     processing_proc = mp_core.Process(target=processing_worker, args=(frame_queue, result_queue, stop_event))
     processing_proc.start()
     
     # 4. Run Loading Screen (BLOCKING)
-    run_loading_screen(capture_ready_event)
+    run_loading_screen(capture_ready_event, capture_failed_event)
 
-    # 5. Start Main UI Worker (Original CV Interface - BLOCKING)
+    # 5. Start the camera UI only after a successful camera startup.
     try:
-        main_ui_worker(frame_queue, result_queue, stop_event, tts_queue, alert_history, tts_active_flag)
+        if capture_failed_event.is_set():
+            print("[SYSTEM] Camera unavailable. Check the connection and restart Focus Guard.")
+        else:
+            main_ui_worker(
+                frame_queue, result_queue, stop_event, tts_queue, alert_history, tts_active_flag
+            )
     except Exception as e:
         print(f"[ERROR] Main UI Worker encountered an exception: {e}")
     finally:
