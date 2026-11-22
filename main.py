@@ -899,6 +899,7 @@ def video_capture_worker(frame_queue: mp_core.Queue, stop_event: mp_core.Event, 
     
     if not cap.isOpened():
         print('[Capture Worker] Cannot open camera! Trying index 1...')
+        cap.release()
         cap = cv2.VideoCapture(1)
         if not cap.isOpened():
             print('[Capture Worker] Cannot open camera on index 1 either. Exiting.')
